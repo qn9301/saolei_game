@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <title>Index</title>
+        <script src="../jquery-1.7.2.min.js"></script>
+        <style type="text/css">
+            *{margin:0;padding:0}
+            tr td{width:50px;height:50px;position:relative;}
+            .lei{background:red}
+            .noclick{background:gray}
+        </style>
+    </head>
+    <body>
+        <table border=1>
+        <script>
+            for(var i=0;i<9;i++){
+                document.write("<tr>")
+                for(var j=0;j<9;j++){
+                    document.write("<td id="+i+"_"+j+"></td>")
+                    
+                }
+                document.write("</tr>")
+            }
+        </script>
+        </table>
+        <script>
+            //右键是2
+            var total=0;
+            document.oncontextmenu = function(){
+                return false;
+            }
+            var leiarr = [];//放雷
+            //产生雷
+
+            //creat();
+
+            function creat(leiid2){
+                //9*9   10个雷
+                //随机产生10个雷的坐标  不能重复
+                for(var i=0;i<10;i++){
+                    var leiid1 = Math.floor(Math.random()*9)+"_"+Math.floor(Math.random()*9)
+                    while(checklei(leiid1) || leiid1==leiid2){
+                        leiid1 = Math.floor(Math.random()*9)+"_"+Math.floor(Math.random()*9)
+                    }
+                    leiarr.push(leiid1)
+                }
+                //产生雷
+                showlei(leiarr);
+                //产生数字
+                for(var i=0;i<9;i++){
+                    for(var j=0;j<9;j++){
+                        var num = shownum(i+"_"+j);
+                        if(num !== null){
+                            $("#"+i+"_"+j).append("<a>"+num+"</a>").css({fontSize:"25px",textAlign:"center",color:getcolor(num),fontWeight:800});
+                        }
+                    }
+                }
+            }
+                //产生雷周围的数字
+
+                //console.dir(leiarr);
+
+                //添加遮罩层
+                for(var i=0;i<9;i++){
+                    for(var j=0;j<9;j++){
+                        $("<button></button>").addClass(i+"_"+j).css({fontSize:"25px",fontWeight:800,position:"absolute",top:"-2px",left:"-3px",zIndex:22,width:"55px",height:"55px"}).appendTo($("#"+i+"_"+j))
+                        total++;
+                    }
+                }
+            
+            document.title = "剩余"+$("button").length+"个方框 "+(10-$(".hongqi").length)+"个雷";
+
+            //添加点击事件
+            $("button").click(function(){
+
+                //如果被标记则不能点击
+                if($(this).html()=="雷"){
+                    return false;
+                }
+
+                
+
+                //判断点击的这个点是否为数字
+                //alert($("#"+$(this).attr("class")).text())
+                var thisid = $(this).attr("class");
+                
+                if($("button").length==81){
+                    creat(thisid);
+                }
+
+                if($("#"+thisid).text()==="0"){
+                    //递归删除num为0的button
+                    checknull(thisid);
+                    document.title = "剩余"+$("button").length+"个方框"+(10-$(".hongqi").length)+"个雷"; 
+                }else{
+                    if($("#"+thisid).attr("class")!="lei"){
+                        //如果不是雷
+                        $(this).remove();
+                        total--;
+                        document.title = "剩余"+$("button").length+"个方框"+(10-$(".hongqi").length)+"个雷"; 
+                    }else{
+                        $("button").remove();
+                        total=0;
+                        document.title = "剩余"+$("button").length+"个方框 "; 
+                        alert("your mother boom!!")
+                        return;
+                    }
+                    
+                }
+                if($("button").length==10){
+                    alert("you win!")
+                }
+            }).mousedown(function(e){
+                //判断是否点击了右键
+                if(e.button==2){
+                    if($(this).html()=="雷"){
+                        $(this).html("").removeClass("hongqi")
+                        document.title = "剩余"+$("button").length+"个方框"+(10-$(".hongqi").length)+"个雷"; 
+                        return false;
+                    }else{
+                        $(this).html("雷").addClass("hongqi")
+                        document.title = "剩余"+$("button").length+"个方框"+(10-$(".hongqi").length)+"个雷"; 
+                        return false;
+                    }
+                }
+            })
+            //递归删除num为0的button
+            function checknull(btnid){
+                //九宫格
+                var btnx = parseInt(btnid.substr(0,btnid.indexOf("_")))
+                var btny = parseInt(btnid.substr(btnid.indexOf("_")+1))
+                for(var i=-1;i<=1;i++){
+                    for(var j=-1;j<=1;j++){
+                        //alert("#"+(leix+i)+"_"+(leiy+j))
+                        //显示周围
+                        var newid = (btnx+i)+"_"+(btny+j);
+                        if($("."+newid).text()=="雷")continue;
+                        if($("."+newid).attr("class")==newid && $("#"+newid).text()==="0"){
+                            //alert(1)
+                            $("."+newid).remove();
+                            checknull(newid)
+                        }else{
+                            $("."+newid).remove();
+                        }
+                    }
+                }
+            }
+
+            //检查雷的坐标
+            function checklei(leiid){
+                for(var key in leiarr){
+                    if(leiid==leiarr[key]){
+                        return true
+                    }
+                }
+                return false;
+            }
+
+            //显示雷点
+            function showlei(arr){
+                for(var key in arr){
+                    $("#"+arr[key]).addClass('lei')
+                }
+            }
+
+            //显示数字
+            function shownum(leiid){
+                var leinum=0;
+                //判断他是否是雷
+                if($("#"+leiid).attr("class")!="lei"){
+                    //取到id的x、y坐标
+                    var leix = parseInt(leiid.substr(0,leiid.indexOf("_")))
+                    var leiy = parseInt(leiid.substr(leiid.indexOf("_")+1))
+                    //查看周围有几个雷
+                    
+                    for(var i=-1;i<=1;i++){
+                        for(var j=-1;j<=1;j++){
+                            //alert("#"+(leix+i)+"_"+(leiy+j))
+                            if($("#"+(leix+i)+"_"+(leiy+j)).attr("class")=="lei"){
+                                leinum++;
+                            }
+                        }
+                    }
+                    
+                    
+                }else{
+                    leinum=null;
+                }
+                return leinum;
+            }
+
+            function getcolor(num){
+                switch(num){
+                    case 0: return "white";break;
+                    case 1: return "#0000FF";break;
+                    case 2: return "#008000";break;
+                    case 3: return "#FF0000";break;
+                    case 4: return "#000080";break;
+                    case 5: return "#800000";break;
+                    case 6: return "#008080";break;
+                    case 7: return "gray";break;
+                    case 8: return "black";break;
+                }
+            }
+        </script>
+    </body>
+</html>
+
